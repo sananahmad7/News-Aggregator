@@ -53,7 +53,7 @@ function Header() {
                             })}
                         </ul>
                     </li>
-                    <li className="dropdown-li"><Link className="no-underline font-semibold flex items-center gap-2" onClick={() => { setShowCountryDropdown(!showCountryDropdown); setShowCategoryDropdown(false) }}>Country <FontAwesomeIcon className={showCountryDropdown ? "down-arrow-icon down-arrow-icon-active" : "down-arrow-icon"} icon={faCircleArrowDown} /></Link>
+                    {/* <li className="dropdown-li"><Link className="no-underline font-semibold flex items-center gap-2" onClick={() => { setShowCountryDropdown(!showCountryDropdown); setShowCategoryDropdown(false) }}>Country <FontAwesomeIcon className={showCountryDropdown ? "down-arrow-icon down-arrow-icon-active" : "down-arrow-icon"} icon={faCircleArrowDown} /></Link>
                         <ul className={showCountryDropdown ? "dropdown p-2 show-dropdown" : "dropdown p-2"}>
                             {countries.map((element, index) => {
                                 return (
@@ -73,7 +73,7 @@ function Header() {
                                 )
                             })}
                         </ul>
-                    </li>
+                    </li> */}
                     <li><Link className="no-underline font-semibold" to="#" onClick={() => { toggleTheme() }}>
 
                         <input type="checkbox" className="checkbox" id="checkbox" />

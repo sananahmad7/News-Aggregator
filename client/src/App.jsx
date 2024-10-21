@@ -16,7 +16,7 @@ function App() {
         <Routes>
           <Route path="/" element={<AllNews />} />
           <Route path="/top-headlines/:category" element={<TopHeadlines />} />
-          <Route path="/country/:iso" element={<CountryNews />} />
+
         </Routes>
 
       </BrowserRouter>
@@ -25,3 +25,4 @@ function App() {
 }
 
 export default App;
+// <Route path="/country/:iso" element={<CountryNews />} />
