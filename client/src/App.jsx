@@ -1,27 +1,22 @@
-import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
-import "./App.css";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Header from "./components/Header";
 import AllNews from "./components/AllNews";
 import TopHeadlines from "./components/TopHeadlines";
-import ForYou from "./components/ForYou"; // Import the ForYou component
-import Login from "./components/Login"; // Import the Login component
-import SignUp from "./components/SignUp"; // Import the Signup component
-import CountryNews from "./components/CountryNews";
+import ForYou from "./components/ForYou";
+import Login from "./components/Login";
+import SignUp from "./components/SignUp";
 
 function App() {
   return (
     <div className="w-full">
       <BrowserRouter>
         <Routes>
-
-          <Route path="/" element={<Login />} /> {/* Login screen */}
-          <Route path="/signup" element={<SignUp />} /> {/* Signup screen */}
-
-          {/* Routes that include the Header */}
+          <Route path="/" element={<Login />} />
+          <Route path="/signup" element={<SignUp />} />
           <Route element={<Header />}>
-            <Route path="/for-you" element={<ForYou />} /> {/* For You page */}
-            <Route path="/top-headlines/:category" element={<TopHeadlines />} /> {/* Top Headlines */}
-            <Route path="/all-news" element={<AllNews />} /> {/* All News page */}
+            <Route path="/for-you" element={<ForYou />} />
+            <Route path="/all-news" element={<AllNews />} />
+            <Route path="/top-headlines/:category" element={<TopHeadlines />} />
           </Route>
         </Routes>
       </BrowserRouter>

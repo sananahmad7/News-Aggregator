@@ -1,26 +1,48 @@
-import React from 'react';
-import { Link } from 'react-router-dom'; // Import the Link component
-
-// Import the background image
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import backgroundImage from '../assets/back.jpg';
 
 function Login() {
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
+    const navigate = useNavigate();
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError('');
+
+        try {
+            const response = await axios.post('http://localhost:3000/login', { email, password });
+            localStorage.setItem('token', response.data.token); // Store the JWT token in localStorage
+            console.log("Attempting to navigate");
+            navigate('/for-you');
+            console.log("Navigation called");
+
+        } catch (err) {
+            setError(err.response.data.error || 'Login failed. Please try again.'); // Set the error message
+        }
+        console.log("success")
+    };
+
     return (
         <div
             style={{
                 backgroundImage: `url(${backgroundImage})`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
-                height: '100vh', // Full viewport height
+                height: '100vh',
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
-                color: 'white', // Set the text color to white
+                color: 'white',
             }}
         >
             <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-sm">
                 <h2 className="text-2xl font-bold text-center mb-6 text-black">Login</h2>
-                <form>
+                {error && <p className="text-red-500 text-center">{error}</p>} {/* Error message */}
+                <form onSubmit={handleSubmit}>
                     <div className="mb-4">
                         <label className="block text-gray-700 text-sm font-semibold mb-2" htmlFor="email">
                             Email
@@ -28,10 +50,12 @@ function Login() {
                         <input
                             type="email"
                             id="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
                             required
                             className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
                             placeholder="Enter your email"
-                            style={{ color: 'black' }} // Apply the text color style directly to the input field
+                            style={{ color: 'black' }}
                         />
                     </div>
                     <div className="mb-6">
@@ -41,10 +65,12 @@ function Login() {
                         <input
                             type="password"
                             id="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
                             required
                             className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
                             placeholder="Enter your password"
-                            style={{ color: 'black' }} // Apply the text color style directly to the input field
+                            style={{ color: 'black' }}
                         />
                     </div>
                     <button

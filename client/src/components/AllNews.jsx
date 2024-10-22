@@ -18,21 +18,29 @@ function AllNews() {
     }
 
     let pageSize = 12;
+    const token = localStorage.getItem("token"); // Get the token from local storage
 
     useEffect(() => {
         setIsLoading(true);
         setError(null);
         fetch(`https://news-aggregator-dusky.vercel.app/all-news?page=${page}&pageSize=${pageSize}`)
+
             .then(response => {
                 if (response.ok) {
                     return response.json();
+                    console(response.json)
+
                 }
                 throw new Error('Network response was not ok');
             })
             .then(myJson => {
                 if (myJson.success) {
                     setTotalResults(myJson.data.totalResults);
+                    console.log("ok?")
                     setData(myJson.data.articles);
+                    console.log("ok?")
+                    console.log("Data fetched:", data);
+
                 } else {
                     setError(myJson.message || 'An error occurred');
                 }

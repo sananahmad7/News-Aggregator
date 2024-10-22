@@ -27,7 +27,7 @@ function Header() {
                 <h3 className="relative heading font-bold md:basis-1/6 text-2xl xs:basis-4/12 z-50 mb-5 mt-5">News Aggregator</h3>
 
                 <ul className={active ? "nav-ul flex gap-11 md:gap-14 xs:gap-12 lg:basis-3/6 md:basis-4/6 md:justify-end active" : "nav-ul flex gap-14 lg:basis-3/6 md:basis-4/6 justify-end"}>
-                    <li><Link className="no-underline font-semibold" to="/" onClick={() => { setActive(!active) }}>All News</Link></li>
+                    <li><Link className="no-underline font-semibold" to="/all-news" onClick={() => { setActive(!active) }}>All News</Link></li>
                     <li><Link className="no-underline font-semibold" to="/for-you" onClick={() => { setActive(!active) }}>For You</Link></li>
                     <li className="dropdown-li">
                         <Link className="no-underline font-semibold flex items-center gap-2" onClick={() => { setShowCategoryDropdown(!showCategoryDropdown); setShowCountryDropdown(false) }}>

@@ -1,29 +1,85 @@
-require("dotenv").config(); //for data in .env file to keep API hidden from readers in case of open source code
 const express = require("express");
+const mongoose = require("mongoose");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 const axios = require("axios");
+const { body, validationResult } = require("express-validator");
 const cors = require("cors");
+require("dotenv").config();
+
 const app = express();
 
-// CORS configuration
-app.use(
-  cors({
-    origin: "*", //allows requests from any origin
-    methods: ["GET", "POST", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+// Middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+//const cors = require("cors");
+app.use(cors());
+
+// app.use(
+//   cors({
+//     origin: "*",
+//     methods: ["GET", "POST", "OPTIONS"],
+//     allowedHeaders: ["Content-Type", "Authorization"],
+//   })
+// );
+
+// Connect to MongoDB
+mongoose
+  .connect(process.env.MONGODB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
   })
+  .then(() => console.log("Connected to MongoDB"))
+  .catch((err) => console.error("MongoDB connection error:", err));
+
+// User Schema
+const UserSchema = new mongoose.Schema(
+  {
+    username: { type: String, required: true, unique: true },
+    email: { type: String, required: true, unique: true, lowercase: true },
+    password: { type: String, required: true },
+    preferences: { type: [String], default: [] },
+    history: { type: [String], default: [] },
+  },
+  { timestamps: true }
 );
 
-/*app.use(express.urlencoded({ extended: true })) Does Parsing the Data: When you use this middleware, Express will automatically parse the URL-encoded data and convert it into a JavaScript object. 
-Populating req.body: After parsing, the data is stored in req.body. So if you submitted the example form, req.body would look like this:*/
+const User = mongoose.model("User", UserSchema);
 
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json()); //makes JSON available in req.body
+// News Schema
+const newsSchema = new mongoose.Schema({
+  newsId: { type: String, required: true, unique: true },
+  title: { type: String, required: true },
+  description: { type: String },
+  url: { type: String, required: true },
+  category: { type: String, default: "general" },
+  country: { type: String, default: "unknown" },
+  publishedAt: { type: Date, required: true },
+  source: { type: String, default: "unknown" },
+  content: { type: String, default: "" },
+  embeddings: { type: Array, default: [] },
+});
 
-//function is designed to make a request to an external API
-async function makeApiRequest(url) {
+const News = mongoose.model("News", newsSchema);
+
+// Middleware for JWT authentication
+// It checks for a valid JWT token before allowing a request to proceed to protected routes. If the token is missing or invalid, it stops the request and sends an error.
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers["authorization"];
+  const token = authHeader && authHeader.split(" ")[1];
+  if (!token) return res.status(401).json({ error: "Access token required" });
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    if (err) return res.status(403).json({ error: "Invalid or expired token" });
+    req.user = user;
+    next();
+  });
+};
+
+// Utility function for making API requests
+const makeApiRequest = async (url) => {
   try {
     const response = await axios.get(url);
-    //If the request is successful, the function returns an object containing
     return {
       status: 200,
       success: true,
@@ -42,14 +98,269 @@ async function makeApiRequest(url) {
       error: error.response ? error.response.data : error.message,
     };
   }
-}
+};
 
-// For all news
+// Validation middleware
+const validateSignup = [
+  body("username").isString().notEmpty().withMessage("Username is required"),
+  body("email").isEmail().withMessage("Valid email is required"),
+  body("password")
+    .isLength({ min: 6 })
+    .withMessage("Password must be at least 6 characters long"),
+];
 
+// Error handling middleware
+const errorHandler = (err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: "An unexpected error occurred" });
+};
+
+// Signup endpoint
+app.post("/signup", validateSignup, async (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  try {
+    const { username, email, password } = req.body;
+    const existingUser = await User.findOne({ $or: [{ username }, { email }] });
+    if (existingUser) {
+      return res
+        .status(400)
+        .json({ error: "Username or email already exists" });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = new User({ username, email, password: hashedPassword });
+
+    await user.save();
+
+    console.log("User created with ID:", user._id.toString());
+
+    // try {
+    //   const response = await axios.post(
+    //     `${process.env.FASTAPI_URL}/update_user_mapping`,
+    //     { user_id: user._id.toString() },
+    //     {
+    //       headers: { "Content-Type": "application/json" },
+    //       validateStatus: function (status) {
+    //         return status < 500;
+    //       },
+    //     }
+    //   );
+    //   console.log("FastAPI response:", response.status, response.data);
+    //   if (response.status !== 200) {
+    //     console.error("Failed to update user mapping:", response.data);
+    //   }
+    // } catch (error) {
+    //   console.error("Error calling FastAPI:", error.message);
+    //   if (error.response) {
+    //     console.error(
+    //       "FastAPI error response:",
+    //       error.response.status,
+    //       error.response.data
+    //     );
+    //   }
+    // }
+
+    res
+      .status(201)
+      .json({ message: "User created successfully", userId: user._id });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Login endpoint
+app.post("/login", async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
+    const user = await User.findOne({ email });
+    if (!user) return res.status(400).json({ error: "User not found" });
+
+    const validPassword = await bcrypt.compare(password, user.password);
+    if (!validPassword)
+      return res.status(400).json({ error: "Invalid password" });
+
+    const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "1d",
+    });
+    res.json({ token });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Set initial preferences endpoint
+app.post(
+  "/setInitialPreferences",
+  authenticateToken,
+  async (req, res, next) => {
+    try {
+      const { preferences } = req.body;
+      if (!Array.isArray(preferences)) {
+        return res.status(400).json({ error: "Preferences must be an array" });
+      }
+
+      const user = await User.findById(req.user._id);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      if (user.preferences.length > 0) {
+        return res.status(400).json({
+          error:
+            "Preferences have already been set. Use updatePreferences to modify.",
+        });
+      }
+
+      user.preferences = preferences;
+      await user.save();
+
+      res.json({ message: "Initial preferences set successfully" });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+// Update preferences endpoint
+app.post("/updatePreferences", authenticateToken, async (req, res, next) => {
+  try {
+    const { preferences } = req.body;
+    if (!Array.isArray(preferences)) {
+      return res.status(400).json({ error: "Preferences must be an array" });
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    user.preferences = preferences;
+    await user.save();
+
+    res.json({ message: "Preferences updated successfully" });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Update history endpoint
+app.post("/updateHistory", authenticateToken, async (req, res, next) => {
+  try {
+    const { articleId } = req.body;
+    if (!articleId) {
+      return res.status(400).json({ error: "Article ID is required" });
+    }
+    await User.findByIdAndUpdate(req.user._id, {
+      $push: { history: articleId },
+    });
+    res.json({ message: "History updated successfully" });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Recommendations endpoint
+app.get("/recommendations", authenticateToken, async (req, res, next) => {
+  try {
+    console.log("Fetching recommendations for user:", req.user._id);
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      console.log("User not found:", req.user._id);
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    console.log("User found:", user._id);
+    console.log("User preferences:", user.preferences);
+    console.log("User history:", user.history);
+
+    const fastApiUrl = `${process.env.FASTAPI_URL}/recommend/hybrid`;
+    console.log("Making request to FastAPI URL:", fastApiUrl);
+
+    const response = await axios.post(fastApiUrl, {
+      user_id: user._id.toString(),
+      preferences: user.preferences,
+      history: user.history,
+    });
+
+    console.log("Received response from FastAPI");
+    res.json(response.data);
+  } catch (error) {
+    console.error("Error in recommendations endpoint:", error);
+
+    if (error.response) {
+      console.error("FastAPI response error:", error.response.data);
+      res.status(error.response.status).json({ error: error.response.data });
+    } else if (error.request) {
+      console.error("No response received from FastAPI");
+      res
+        .status(500)
+        .json({ error: "No response received from recommendation service" });
+    } else {
+      console.error("Error setting up request:", error.message);
+      res
+        .status(500)
+        .json({ error: "Error setting up request to recommendation service" });
+    }
+  }
+});
+
+// Fetch and store news endpoint
+app.get("/fetchNews", async (req, res, next) => {
+  const { pageSize = 80, page = 1, q = "world" } = req.query;
+  try {
+    const url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(
+      q
+    )}&page=${page}&pageSize=${pageSize}&apiKey=${process.env.API_KEY}`;
+    const result = await makeApiRequest(url);
+
+    const newsData = result.data.articles.map((article) => ({
+      newsId: article.url,
+      title: article.title,
+      description: article.description,
+      url: article.url,
+      category: article.category || "general",
+      country: article.country || "unknown",
+      publishedAt: new Date(article.publishedAt),
+      source: article.source.name || "unknown",
+      content: article.content || "",
+      embeddings: [],
+    }));
+
+    const updatePromises = newsData.map((article) =>
+      News.updateOne(
+        { newsId: article.newsId },
+        { $setOnInsert: article },
+        { upsert: true }
+      )
+    );
+
+    await Promise.all(updatePromises);
+
+    res.status(200).json({
+      message: "News fetched and stored (no duplicates)",
+      count: newsData.length,
+    });
+  } catch (error) {
+    if (error.response && error.response.status === 429) {
+      res
+        .status(429)
+        .json({ message: "Rate limit exceeded. Please try again later." });
+    } else {
+      next(error);
+    }
+  }
+});
+
+// All news endpoint
 app.get("/all-news", async (req, res) => {
   let pageSize = parseInt(req.query.pageSize) || 80;
   let page = parseInt(req.query.page) || 1;
-  let q = req.query.q || "world"; // Default search query if none provided
+  let q = req.query.q || "world";
 
   let url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(
     q
@@ -58,8 +369,7 @@ app.get("/all-news", async (req, res) => {
   res.status(result.status).json(result);
 });
 
-//For Top Headlines
-
+// Top headlines endpoint
 app.get("/top-headlines", async (req, res) => {
   let pageSize = parseInt(req.query.pageSize) || 80;
   let page = parseInt(req.query.page) || 1;
@@ -70,8 +380,7 @@ app.get("/top-headlines", async (req, res) => {
   res.status(result.status).json(result);
 });
 
-//For news from a specific counrty
-
+// News from a specific country endpoint
 app.get("/country/:iso", async (req, res) => {
   let pageSize = parseInt(req.query.pageSize) || 80;
   let page = parseInt(req.query.page) || 1;
@@ -82,9 +391,8 @@ app.get("/country/:iso", async (req, res) => {
   res.status(result.status).json(result);
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, function () {
-  console.log(`Server is running at port ${PORT}`);
-});
+// Use error handling middleware
+app.use(errorHandler);
 
-/////////////////////////////////
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
