@@ -23,7 +23,7 @@ function ForYou() {
         setIsLoading(true);
         setError(null);
         // Replace with your API endpoint for fetching personalized news
-        fetch(`https://news-aggregator-dusky.vercel.app/for-you?page=${page}&pageSize=${pageSize}`)
+        fetch(`https://news-aggregator-dusky.vercel.app/all-news?page=${page}&pageSize=${pageSize}`)
             .then(response => {
                 if (response.ok) {
                     return response.json();

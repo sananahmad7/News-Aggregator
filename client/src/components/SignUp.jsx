@@ -15,8 +15,8 @@ function SignUp() {
         setError('');
 
         try {
-            const response = await axios.post('http://localhost:3000/signup', { username, email, password });
-            navigate('/'); // Redirect to the homepage after successful signup
+            const response = await axios.post('http://localhost:3001/signup', { username, email, password });
+            navigate('/all-news'); // Redirect to the homepage after successful signup
         } catch (err) {
             setError(err.response.data.error || 'Signup failed. Please try again.'); // Set the error message
         }

@@ -14,11 +14,9 @@ function Login() {
         setError('');
 
         try {
-            const response = await axios.post('http://localhost:3000/login', { email, password });
+            const response = await axios.post('http://localhost:3001/login', { email, password });
             localStorage.setItem('token', response.data.token); // Store the JWT token in localStorage
-            console.log("Attempting to navigate");
-            navigate('/for-you');
-            console.log("Navigation called");
+            navigate('/all-news');
 
         } catch (err) {
             setError(err.response.data.error || 'Login failed. Please try again.'); // Set the error message

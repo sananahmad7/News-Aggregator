@@ -1,8 +1,10 @@
-import { React, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import EverythingCard from './EverythingCard';
 import Loader from './Loader';
 
 function AllNews() {
+    console.log('AllNews component is mounted'); // Log when the component mounts
+
     const [data, setData] = useState([]);
     const [page, setPage] = useState(1);
     const [totalResults, setTotalResults] = useState(0);
@@ -18,29 +20,37 @@ function AllNews() {
     }
 
     let pageSize = 12;
-    const token = localStorage.getItem("token"); // Get the token from local storage
 
     useEffect(() => {
+        console.log('Fetching news...'); // Log when fetch starts
+
+        const token = localStorage.getItem("token"); // Get the token from local storage
+
         setIsLoading(true);
         setError(null);
-        fetch(`https://news-aggregator-dusky.vercel.app/all-news?page=${page}&pageSize=${pageSize}`)
 
+        fetch(`http://localhost:3001/fetchNews?page=${page}&pageSize=${pageSize}`, {
+            headers: {
+                "Authorization": `Bearer ${token}`, // Include the token in the headers
+                "Content-Type": "application/json"
+            }
+        })
             .then(response => {
+                console.log('Response status:', response.status); // Log response status
+
                 if (response.ok) {
                     return response.json();
-                    console(response.json)
 
                 }
                 throw new Error('Network response was not ok');
             })
             .then(myJson => {
+                console.log('Fetched JSON:', myJson); // Log the fetched data
+
                 if (myJson.success) {
                     setTotalResults(myJson.data.totalResults);
-                    console.log("ok?")
                     setData(myJson.data.articles);
-                    console.log("ok?")
-                    console.log("Data fetched:", data);
-
+                    console.log("Data fetched:", myJson.data.articles);
                 } else {
                     setError(myJson.message || 'An error occurred');
                 }
@@ -52,6 +62,10 @@ function AllNews() {
             .finally(() => {
                 setIsLoading(false);
             });
+
+        return () => {
+            setIsLoading(false);
+        };
     }, [page]);
 
     return (

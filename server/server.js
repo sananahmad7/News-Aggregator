@@ -8,20 +8,20 @@ const cors = require("cors");
 require("dotenv").config();
 
 const app = express();
+//app.use(errorHandler);
 
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-//const cors = require("cors");
-app.use(cors());
+// app.use(cors());
 
-// app.use(
-//   cors({
-//     origin: "*",
-//     methods: ["GET", "POST", "OPTIONS"],
-//     allowedHeaders: ["Content-Type", "Authorization"],
-//   })
-// );
+app.use(
+  cors({
+    origin: "http://localhost:3002",
+    methods: ["GET", "POST", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 
 // Connect to MongoDB
 mongoose
@@ -68,6 +68,7 @@ const authenticateToken = (req, res, next) => {
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1];
   if (!token) return res.status(401).json({ error: "Access token required" });
+  console.log("Received token:", token); // Log received token
 
   jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
     if (err) return res.status(403).json({ error: "Invalid or expired token" });
@@ -310,14 +311,14 @@ app.get("/recommendations", authenticateToken, async (req, res, next) => {
 });
 
 // Fetch and store news endpoint
-app.get("/fetchNews", async (req, res, next) => {
+app.get("/fetchNews", authenticateToken, async (req, res, next) => {
   const { pageSize = 80, page = 1, q = "world" } = req.query;
   try {
     const url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(
       q
     )}&page=${page}&pageSize=${pageSize}&apiKey=${process.env.API_KEY}`;
     const result = await makeApiRequest(url);
-
+    console.log(token);
     const newsData = result.data.articles.map((article) => ({
       newsId: article.url,
       title: article.title,
@@ -342,8 +343,11 @@ app.get("/fetchNews", async (req, res, next) => {
     await Promise.all(updatePromises);
 
     res.status(200).json({
-      message: "News fetched and stored (no duplicates)",
-      count: newsData.length,
+      success: true,
+      data: {
+        totalResults: result.data.totalResults,
+        articles: newsData,
+      },
     });
   } catch (error) {
     if (error.response && error.response.status === 429) {
@@ -386,7 +390,7 @@ app.get("/country/:iso", async (req, res) => {
   let page = parseInt(req.query.page) || 1;
   const country = req.params.iso;
 
-  let url = `https://newsapi.org/v2/top-headlines?country=${country}&apiKey=${process.env.API_KEY}&page=${page}&pageSize=${pageSize}`;
+  let url = `https://newsapi.org/v2/top-headlines?country=${country}&page=${page}&pageSize=${pageSize}&apiKey=${process.env.API_KEY}`;
   const result = await makeApiRequest(url);
   res.status(result.status).json(result);
 });
