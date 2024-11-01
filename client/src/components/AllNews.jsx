@@ -3,7 +3,6 @@ import EverythingCard from './EverythingCard';
 import Loader from './Loader';
 
 function AllNews() {
-    console.log('AllNews component is mounted'); // Log when the component mounts
 
     const [data, setData] = useState([]);
     const [page, setPage] = useState(1);
@@ -20,16 +19,15 @@ function AllNews() {
     }
 
     let pageSize = 12;
+    const token = localStorage.getItem("token"); // Get the token from local storage
 
     useEffect(() => {
-        console.log('Fetching news...'); // Log when fetch starts
 
-        const token = localStorage.getItem("token"); // Get the token from local storage
 
         setIsLoading(true);
         setError(null);
 
-        fetch(`http://localhost:3001/fetchNews?page=${page}&pageSize=${pageSize}`, {
+        fetch(`https://news-aggregator-dusky.vercel.app/all-news?page=${page}&pageSize=${pageSize}`, {
             headers: {
                 "Authorization": `Bearer ${token}`, // Include the token in the headers
                 "Content-Type": "application/json"
@@ -74,7 +72,9 @@ function AllNews() {
 
             <div className='my-10 cards grid lg:place-content-center md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 xs:grid-cols-1 xs:gap-4 md:gap-10 lg:gap-14 md:px-16 xs:p-3 '>
                 {!isLoading ? data.map((element, index) => (
+
                     <EverythingCard
+
                         title={element.title}
                         description={element.description}
                         imgUrl={element.urlToImage}

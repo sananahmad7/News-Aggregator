@@ -25,10 +25,7 @@ app.use(
 
 // Connect to MongoDB
 mongoose
-  .connect(process.env.MONGODB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
+  .connect(process.env.MONGODB_URI)
   .then(() => console.log("Connected to MongoDB"))
   .catch((err) => console.error("MongoDB connection error:", err));
 
@@ -318,7 +315,6 @@ app.get("/fetchNews", authenticateToken, async (req, res, next) => {
       q
     )}&page=${page}&pageSize=${pageSize}&apiKey=${process.env.API_KEY}`;
     const result = await makeApiRequest(url);
-    console.log(token);
     const newsData = result.data.articles.map((article) => ({
       newsId: article.url,
       title: article.title,
@@ -360,37 +356,26 @@ app.get("/fetchNews", authenticateToken, async (req, res, next) => {
   }
 });
 
-// All news endpoint
-app.get("/all-news", async (req, res) => {
-  let pageSize = parseInt(req.query.pageSize) || 80;
-  let page = parseInt(req.query.page) || 1;
-  let q = req.query.q || "world";
+//  All news endpoint
+// app.get("/all-news", async (req, res) => {
+//   let pageSize = parseInt(req.query.pageSize) || 80;
+//   let page = parseInt(req.query.page) || 1;
+//   let q = req.query.q || "world";
 
-  let url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(
-    q
-  )}&page=${page}&pageSize=${pageSize}&apiKey=${process.env.API_KEY}`;
-  const result = await makeApiRequest(url);
-  res.status(result.status).json(result);
-});
+//   let url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(
+//     q
+//   )}&page=${page}&pageSize=${pageSize}&apiKey=${process.env.API_KEY}`;
+//   const result = await makeApiRequest(url);
+//   res.status(result.status).json(result);
+// });
 
 // Top headlines endpoint
-app.get("/top-headlines", async (req, res) => {
+app.get("/top-headlines", authenticateToken, async (req, res) => {
   let pageSize = parseInt(req.query.pageSize) || 80;
   let page = parseInt(req.query.page) || 1;
   let category = req.query.category || "general";
 
   let url = `https://newsapi.org/v2/top-headlines?category=${category}&language=en&page=${page}&pageSize=${pageSize}&apiKey=${process.env.API_KEY}`;
-  const result = await makeApiRequest(url);
-  res.status(result.status).json(result);
-});
-
-// News from a specific country endpoint
-app.get("/country/:iso", async (req, res) => {
-  let pageSize = parseInt(req.query.pageSize) || 80;
-  let page = parseInt(req.query.page) || 1;
-  const country = req.params.iso;
-
-  let url = `https://newsapi.org/v2/top-headlines?country=${country}&page=${page}&pageSize=${pageSize}&apiKey=${process.env.API_KEY}`;
   const result = await makeApiRequest(url);
   res.status(result.status).json(result);
 });
