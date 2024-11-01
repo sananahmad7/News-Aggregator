@@ -20,12 +20,20 @@ function TopHeadlines() {
     }
 
     let pageSize = 6;
+    const token = localStorage.getItem("token"); // Get the token from local storage
 
     useEffect(() => {
+
         setIsLoading(true);
         setError(null);
         const categoryParam = params.category ? `&category=${params.category}` : "";
-        fetch(`https://news-aggregator-dusky.vercel.app/top-headlines?language=en${categoryParam}&page=${page}&pageSize=${pageSize}`)
+        fetch(`https://news-aggregator-dusky.vercel.app/top-headlines?language=en${categoryParam}&page=${page}&pageSize=${pageSize}`
+            , {
+                headers: {
+                    "Authorization": `Bearer ${token}`, // Include the token in the headers
+                    "Content-Type": "application/json"
+                }
+            })
             .then((response) => {
                 if (response.ok) {
                     return response.json();

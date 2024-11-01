@@ -1,31 +1,39 @@
-import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
-import "./App.css";
-import Header from "./components/Header";
+import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 import AllNews from "./components/AllNews";
 import TopHeadlines from "./components/TopHeadlines";
-import ForYou from "./components/ForYou"; // Import the ForYou component
-import Login from "./components/Login"; // Import the Login component
-import SignUp from "./components/SignUp"; // Import the Signup component
-import CountryNews from "./components/CountryNews";
+import ForYou from "./components/ForYou";
+import Login from "./components/Login";
+import SignUp from "./components/SignUp";
+import Header from "./components/Header";
+import React from "react";
 
 function App() {
   return (
     <div className="w-full">
       <BrowserRouter>
-        <Routes>
-
-          <Route path="/" element={<Login />} /> {/* Login screen */}
-          <Route path="/signup" element={<SignUp />} /> {/* Signup screen */}
-
-          {/* Routes that include the Header */}
-          <Route element={<Header />}>
-            <Route path="/for-you" element={<ForYou />} /> {/* For You page */}
-            <Route path="/top-headlines/:category" element={<TopHeadlines />} /> {/* Top Headlines */}
-            <Route path="/all-news" element={<AllNews />} /> {/* All News page */}
-          </Route>
-        </Routes>
+        <MainContent />
       </BrowserRouter>
     </div>
+  );
+}
+
+function MainContent() {
+  const location = useLocation();
+
+  // Check if the current path is either login or signup; if so, don't show the header
+  const hideHeader = location.pathname === "/" || location.pathname === "/signup";
+
+  return (
+    <>
+      {!hideHeader && <Header />}
+      <Routes>
+        <Route path="/" element={<Login />} />
+        <Route path="/signup" element={<SignUp />} />
+        <Route path="/all-news" element={<AllNews />} />
+        <Route path="/for-you" element={<ForYou />} />
+        <Route path="/top-headlines/:category" element={<TopHeadlines />} />
+      </Routes>
+    </>
   );
 }
 
