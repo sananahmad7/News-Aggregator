@@ -27,24 +27,21 @@ function AllNews() {
         setIsLoading(true);
         setError(null);
 
-        fetch(`https://news-aggregator-dusky.vercel.app/all-news?page=${page}&pageSize=${pageSize}`, {
+        fetch(`http://localhost:3001/fetchNews?page=${page}&pageSize=${pageSize}`, {
             headers: {
-                "Authorization": `Bearer ${token}`, // Include the token in the headers
+                "Authorization": `Bearer ${token}`,
                 "Content-Type": "application/json"
             }
         })
             .then(response => {
-                console.log('Response status:', response.status); // Log response status
-
+                console.log('Response status:', response.status);
                 if (response.ok) {
                     return response.json();
-
                 }
                 throw new Error('Network response was not ok');
             })
             .then(myJson => {
-                console.log('Fetched JSON:', myJson); // Log the fetched data
-
+                console.log('Fetched JSON:', myJson);
                 if (myJson.success) {
                     setTotalResults(myJson.data.totalResults);
                     setData(myJson.data.articles);
@@ -55,7 +52,11 @@ function AllNews() {
             })
             .catch(error => {
                 console.error('Fetch error:', error);
-                setError('Failed to fetch news. Please try again later.');
+                if (error.response?.status === 429) {
+                    setError('Rate limit exceeded. Please try again later.');
+                } else {
+                    setError('Failed to fetch news. Please try again later.');
+                }
             })
             .finally(() => {
                 setIsLoading(false);

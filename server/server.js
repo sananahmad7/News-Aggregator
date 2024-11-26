@@ -20,6 +20,7 @@ app.use(
     origin: "http://localhost:3002",
     methods: ["GET", "POST", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
   })
 );
 
@@ -65,7 +66,6 @@ const authenticateToken = (req, res, next) => {
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1];
   if (!token) return res.status(401).json({ error: "Access token required" });
-  console.log("Received token:", token); // Log received token
 
   jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
     if (err) return res.status(403).json({ error: "Invalid or expired token" });
@@ -315,35 +315,15 @@ app.get("/fetchNews", authenticateToken, async (req, res, next) => {
       q
     )}&page=${page}&pageSize=${pageSize}&apiKey=${process.env.API_KEY}`;
     const result = await makeApiRequest(url);
-    const newsData = result.data.articles.map((article) => ({
-      newsId: article.url,
-      title: article.title,
-      description: article.description,
-      url: article.url,
-      category: article.category || "general",
-      country: article.country || "unknown",
-      publishedAt: new Date(article.publishedAt),
-      source: article.source.name || "unknown",
-      content: article.content || "",
-      embeddings: [],
-    }));
 
-    const updatePromises = newsData.map((article) =>
-      News.updateOne(
-        { newsId: article.newsId },
-        { $setOnInsert: article },
-        { upsert: true }
-      )
-    );
+    if (!result.success) {
+      return res.status(result.status).json(result);
+    }
 
-    await Promise.all(updatePromises);
-
+    // Return the exact format that the News API provides
     res.status(200).json({
       success: true,
-      data: {
-        totalResults: result.data.totalResults,
-        articles: newsData,
-      },
+      data: result.data,
     });
   } catch (error) {
     if (error.response && error.response.status === 429) {
@@ -356,18 +336,21 @@ app.get("/fetchNews", authenticateToken, async (req, res, next) => {
   }
 });
 
-//  All news endpoint
-// app.get("/all-news", async (req, res) => {
-//   let pageSize = parseInt(req.query.pageSize) || 80;
-//   let page = parseInt(req.query.page) || 1;
-//   let q = req.query.q || "world";
+//All news endpoint
+app.get("/all-news", async (req, res) => {
+  let pageSize = parseInt(req.query.pageSize) || 80;
+  let page = parseInt(req.query.page) || 1;
+  let q = req.query.q || "world";
 
-//   let url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(
-//     q
-//   )}&page=${page}&pageSize=${pageSize}&apiKey=${process.env.API_KEY}`;
-//   const result = await makeApiRequest(url);
-//   res.status(result.status).json(result);
-// });
+  let url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(
+    q
+  )}&page=${page}&pageSize=${pageSize}&apiKey=${process.env.API_KEY}`;
+  const result = await makeApiRequest(url);
+  res.status(result.status).json({
+    success: true,
+    data: result.data,
+  });
+});
 
 // Top headlines endpoint
 app.get("/top-headlines", authenticateToken, async (req, res) => {
@@ -383,5 +366,5 @@ app.get("/top-headlines", authenticateToken, async (req, res) => {
 // Use error handling middleware
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
