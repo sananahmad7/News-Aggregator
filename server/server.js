@@ -45,18 +45,25 @@ const UserSchema = new mongoose.Schema(
 const User = mongoose.model("User", UserSchema);
 
 // News Schema
-const newsSchema = new mongoose.Schema({
-  newsId: { type: String, required: true, unique: true },
-  title: { type: String, required: true },
-  description: { type: String },
-  url: { type: String, required: true },
-  category: { type: String, default: "general" },
-  country: { type: String, default: "unknown" },
-  publishedAt: { type: Date, required: true },
-  source: { type: String, default: "unknown" },
-  content: { type: String, default: "" },
-  embeddings: { type: Array, default: [] },
-});
+const newsSchema = new mongoose.Schema(
+  {
+    newsId: { type: String, required: true, unique: true },
+    title: { type: String, required: true },
+    description: { type: String },
+    url: { type: String, required: true },
+    category: { type: String, default: "general" },
+    country: { type: String, default: "unknown" },
+    publishedAt: { type: Date, required: true },
+    source: { type: String, default: "unknown" },
+    content: { type: String, default: "" },
+    urlToImage: { type: String },
+    author: { type: String, default: "unknown" },
+    embeddings: { type: Array, default: [] },
+  },
+  {
+    timestamps: true, // Add timestamps for tracking when articles are added/updated
+  }
+);
 
 const News = mongoose.model("News", newsSchema);
 
@@ -320,16 +327,55 @@ app.get("/fetchNews", authenticateToken, async (req, res, next) => {
       return res.status(result.status).json(result);
     }
 
-    // Return the exact format that the News API provides
-    res.status(200).json({
-      success: true,
-      data: result.data,
-    });
+    // Store articles in MongoDB
+    const articles = result.data.articles;
+
+    try {
+      // Store articles using Promise.all
+      await Promise.all(
+        articles.map((article) =>
+          News.findOneAndUpdate(
+            { newsId: article.url },
+            {
+              newsId: article.url,
+              title: article.title,
+              description: article.description || "",
+              url: article.url,
+              category: q, // Using search query as category
+              publishedAt: new Date(article.publishedAt),
+              source: article.source.name || "unknown",
+              content: article.content || "",
+              urlToImage: article.urlToImage || "",
+              author: article.author || "unknown",
+            },
+            { upsert: true }
+          )
+        )
+      );
+
+      console.log(`Successfully stored/updated ${articles.length} articles`);
+
+      // Return the API response after DB operation is complete
+      res.status(200).json({
+        success: true,
+        data: result.data,
+        message: `${articles.length} articles stored/updated in database`,
+      });
+    } catch (dbError) {
+      console.error("Error storing articles:", dbError);
+      // Still return the API data even if DB storage failed
+      res.status(200).json({
+        success: true,
+        data: result.data,
+        warning: "Articles fetched but failed to store in database",
+      });
+    }
   } catch (error) {
     if (error.response && error.response.status === 429) {
-      res
-        .status(429)
-        .json({ message: "Rate limit exceeded. Please try again later." });
+      res.status(429).json({
+        success: false,
+        message: "Rate limit exceeded. Please try again later.",
+      });
     } else {
       next(error);
     }
