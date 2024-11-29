@@ -1,28 +1,59 @@
 import React from "react";
+import axios from "axios";
 
 function EverythingCard(props) {
+    const handleArticleClick = async (url) => {
+        const token = localStorage.getItem("token"); // Get the token from local storage
+        try {
+            // Store the article ID in MongoDB
+            await axios.post(
+                'http://localhost:3001/updateHistory',
+                { articleId: props.url }, // Assuming `props.url` is the article ID
+                {
+                    headers: {
+                        "Authorization": `Bearer ${token}`,
+                        "Content-Type": "application/json"
+                    }
+                }
+            );
+            console.log("Article history updated successfully");
+
+            // Open the article URL in a new tab
+            window.open(url, "_blank");
+        } catch (error) {
+            console.error("Error updating article history:", error);
+        }
+    };
+
     return (
         <div className="everything-card mt-10">
-
             <div className="everything-card flex flex-wrap p-5 gap-1 mb-1">
-                <b className="title">{props.title || "Untitled"}</b>
+                <b
+                    className="title cursor-pointer"
+                    onClick={() => handleArticleClick(props.url)} // Click on title
+                >
+                    {props.title || "Untitled"}
+                </b>
                 <div className="everything-card-img mx-auto">
                     <img className="everything-card-img" src={props.imgUrl || "default-image-url.jpg"} alt="img" />
                 </div>
                 <div className="description">
                     <p className="description-text leading-7">
-                        {props.description ? props.description.substring(0, 200) : "No description available."}                    </p>
+                        {props.description ? props.description.substring(0, 200) : "No description available."}
+                    </p>
                 </div>
-
                 <div className="info">
                     <div className="source-info flex items-center gap-2">
                         <span className="font-semibold">Source:</span>
                         <a
                             href={props.url || "#"}
                             target="_blank"
+                            rel="noopener noreferrer"
                             className="link underline break-words"
-
-
+                            onClick={(e) => {
+                                e.preventDefault(); // Prevent default anchor behavior
+                                handleArticleClick(props.url); // Call the click handler
+                            }}
                         >
                             {props.source ? props.source.substring(0, 70) : "Unknown Source"}
                         </a>
@@ -38,7 +69,6 @@ function EverythingCard(props) {
                         </p>
                     </div>
                 </div>
-
             </div>
 
             {/* Added the new card content with styles */}

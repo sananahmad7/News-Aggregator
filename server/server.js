@@ -255,6 +255,7 @@ app.post("/updatePreferences", authenticateToken, async (req, res, next) => {
 // Update history endpoint
 app.post("/updateHistory", authenticateToken, async (req, res, next) => {
   try {
+    console.log("Received data:", req.body);
     const { articleId } = req.body;
     if (!articleId) {
       return res.status(400).json({ error: "Article ID is required" });
