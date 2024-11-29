@@ -75,14 +75,14 @@ function AllNews() {
                 {!isLoading ? data.map((element, index) => (
 
                     <EverythingCard
-
+                        id={element.source ? element.source.id : "Unknown id"}
                         title={element.title}
                         description={element.description}
                         imgUrl={element.urlToImage}
                         publishedAt={element.publishedAt}
                         url={element.url}
                         author={element.author}
-                        source={element.source.name}
+                        source={element.source ? element.source.name : "Unknown Source"}
                         key={index}
                     />
                 )) : <Loader />}
