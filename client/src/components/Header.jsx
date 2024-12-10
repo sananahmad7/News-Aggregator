@@ -9,7 +9,7 @@ function Header() {
     const [active, setActive] = useState(false);
     const [showCountryDropdown, setShowCountryDropdown] = useState(false);
     const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
-    const [theme, setTheme] = useState("dark-theme");
+    const [theme, setTheme] = useState("light-theme");
     let category = ["business", "entertainment", "general", "health", "science", "sports", "technology", "politics"];
 
     useEffect(() => {
