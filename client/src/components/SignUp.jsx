@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import backgroundImage from '../assets/back.jpg';
+import backgroundImage from '../assets/bg1.jpg';
 
 function SignUp() {
     const [username, setUsername] = useState('');
@@ -88,11 +88,11 @@ function SignUp() {
             {!showPreferences ? (
 
                 <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-sm">
-                    <h2 className="text-2xl font-bold text-center mb-6 text-black">Sign Up</h2>
-                    {error && <p className="text-red-500 text-center">{error}</p>} {/* Error message */}
+                    <h2 className="text-2xl font-bold text-center mb-6 text-black " style={{ color: 'black' }}>Sign Up</h2>
+                    {error && <p className="text-red-500 text-center" style={{ color: 'black', fontSize: 14, fontWeight: "bold" }}>{error}</p>} {/* Error message */}
                     <form onSubmit={handleSubmit}>
                         <div className="mb-4">
-                            <label className="block text-gray-700 text-sm font-semibold mb-2" htmlFor="username">
+                            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="username" style={{ color: 'black', fontSize: 16 }}>
                                 Username
                             </label>
                             <input
@@ -107,7 +107,7 @@ function SignUp() {
                             />
                         </div>
                         <div className="mb-4">
-                            <label className="block text-gray-700 text-sm font-semibold mb-2" htmlFor="email">
+                            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="email" style={{ color: 'black', fontSize: 16 }}>
                                 Email
                             </label>
                             <input
@@ -122,7 +122,7 @@ function SignUp() {
                             />
                         </div>
                         <div className="mb-6">
-                            <label className="block text-gray-700 text-sm font-semibold mb-2" htmlFor="password">
+                            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password" style={{ color: 'black', fontSize: 16 }}>
                                 Password
                             </label>
                             <input
@@ -139,11 +139,12 @@ function SignUp() {
                         <button
                             type="submit"
                             className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600 transition duration-200"
+                            style={{ color: 'black', fontSize: 16, fontWeight: 'bold' }}
                         >
                             Sign Up
                         </button>
                     </form>
-                    <p className="text-center text-sm mt-4">
+                    <p className="text-center text-sm mt-4" style={{ color: 'black', fontSize: 16, fontWeight: 'bold' }}>
                         Already have an account?{' '}
                         <Link to="/" className="text-blue-500 hover:underline">click here to login</Link>.
                     </p>
@@ -151,7 +152,7 @@ function SignUp() {
             ) : (
                 // Preferences selection popup
                 <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-                    <h2 className="text-2xl font-bold text-center mb-6 text-black">
+                    <h2 className="text-2xl font-bold text-center mb-6 text-black" style={{ color: 'black', fontSize: 20, fontWeight: 'bold' }}>
                         Select Your Preferences
                     </h2>
                     {error && <p className="text-red-500 text-center mb-4">{error}</p>}
@@ -161,9 +162,10 @@ function SignUp() {
                                 key={category}
                                 onClick={() => handlePreferenceClick(category)}
                                 className={`p-3 rounded-lg transition-colors duration-200 ${selectedPreferences.includes(category)
-                                        ? 'bg-blue-600 text-white border-2 border-blue-700 shadow-lg transform scale-105'
-                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                    ? 'bg-blue-600 text-white border-2 border-blue-700 shadow-lg transform scale-105'
+                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                     }`}
+                                style={{ color: 'black', fontSize: 16, fontWeight: 'bold' }}
                             >
                                 {category.charAt(0).toUpperCase() + category.slice(1)}
                             </button>
@@ -173,13 +175,14 @@ function SignUp() {
                         onClick={handlePreferencesSubmit}
                         disabled={selectedPreferences.length === 0}
                         className={`w-full p-3 rounded-lg text-white transition-colors duration-200 ${selectedPreferences.length === 0
-                                ? 'bg-gray-400 cursor-not-allowed'
-                                : 'bg-blue-500 hover:bg-blue-600'
+                            ? 'bg-gray-400 cursor-not-allowed'
+                            : 'bg-blue-500 hover:bg-blue-600'
                             }`}
+                        style={{ color: 'black', fontSize: 16, fontWeight: 'bold' }}
                     >
                         Continue
                     </button>
-                    <p className="text-gray-600 text-sm text-center mt-4">
+                    <p className="text-gray-600 text-sm text-center mt-4" style={{ color: 'black', fontSize: 16, fontWeight: 'bold' }}>
                         Please select at least one preference to continue
                     </p>
                 </div>

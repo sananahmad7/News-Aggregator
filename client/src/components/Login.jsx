@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import backgroundImage from '../assets/back.jpg';
+import backgroundImage from '../assets/bg1.jpg';
 
 function Login() {
     const [email, setEmail] = useState('');
@@ -37,12 +37,12 @@ function Login() {
                 color: 'white',
             }}
         >
-            <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-sm">
-                <h2 className="text-2xl font-bold text-center mb-6 text-black">Login</h2>
-                {error && <p className="text-red-500 text-center">{error}</p>} {/* Error message */}
+            <div className="bg-white p-8 rounded-lg shadow-2xl w-full max-w-sm ">
+                <h2 className="text-2xl font-bold text-center mb-6" style={{ color: 'black' }}>Login</h2>
+                {error && <p className="text-red-500 text-center font-bold">{error}</p>} {/* Error message */}
                 <form onSubmit={handleSubmit}>
                     <div className="mb-4">
-                        <label className="block text-gray-700 text-sm font-semibold mb-2" htmlFor="email">
+                        <label className="block text-gray-700 text-sm font-semibold mb-2" htmlFor="email" style={{ color: 'black', fontWeight: 'bold', fontSize: 16 }}>
                             Email
                         </label>
                         <input
@@ -57,7 +57,7 @@ function Login() {
                         />
                     </div>
                     <div className="mb-6">
-                        <label className="block text-gray-700 text-sm font-semibold mb-2" htmlFor="password">
+                        <label className="block text-gray-700 text-sm font-semibold mb-2" htmlFor="password" style={{ color: 'black', fontWeight: 'bold', fontSize: 16 }}>
                             Password
                         </label>
                         <input
@@ -73,14 +73,15 @@ function Login() {
                     </div>
                     <button
                         type="submit"
-                        className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600 transition duration-200"
+                        className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600 transition duration-200 font-bold "
+                        style={{ color: 'black', fontSize: 16 }}
                     >
                         Login
                     </button>
                 </form>
-                <p className="text-center text-sm mt-4 text-white">
+                <p className="text-center text-sm mt-4 text-white font-bold" style={{ color: 'black', fontWeight: 'bold', fontSize: 14 }}>
                     If you are not already registered,{' '}
-                    <Link to="/signup" className="text-blue-500 hover:underline">click here to sign up</Link>.
+                    <Link to="/signup" className="text-blue-500 hover:underline font-bold">click here to sign up</Link>.
                 </p>
             </div>
         </div>
