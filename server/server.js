@@ -23,6 +23,7 @@ app.use(
     credentials: true,
   })
 );
+app.options("*", cors());
 
 // Connect to MongoDB
 mongoose
