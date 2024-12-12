@@ -23,22 +23,22 @@ function TopHeadlines() {
     const token = localStorage.getItem("token"); // Get the token from local storage
 
     useEffect(() => {
-
         setIsLoading(true);
         setError(null);
         const categoryParam = params.category ? `&category=${params.category}` : "";
-        fetch(`https://news-aggregator-dusky.vercel.app/top-headlines?language=en${categoryParam}&page=${page}&pageSize=${pageSize}`
-            , {
-                headers: {
-                    "Authorization": `Bearer ${token}`, // Include the token in the headers
-                    "Content-Type": "application/json"
-                }
-            })
+        fetch(`http://localhost:3001/top-headlines?language=en${categoryParam}&page=${page}&pageSize=${pageSize}`, {
+            headers: {
+                "Authorization": `Bearer ${token}`,
+                "Content-Type": "application/json"
+            }
+        })
             .then((response) => {
                 if (response.ok) {
                     return response.json();
                 }
-                throw new Error('Network response was not ok');
+                return response.text().then(text => {
+                    throw new Error(`Network response was not ok: ${text}`);
+                });
             })
             .then((json) => {
                 if (json.success) {
@@ -50,6 +50,9 @@ function TopHeadlines() {
             })
             .catch((error) => {
                 console.error('Fetch error:', error);
+                if (error.response) {
+                    console.error('Response data:', error.response.data);
+                }
                 setError('Failed to fetch news. Please try again later.');
             })
             .finally(() => {
